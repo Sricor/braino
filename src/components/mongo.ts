@@ -1,4 +1,4 @@
-import { MongoClient, ObjectId } from "mongo";
+import { MongoClient } from "mongo";
 
 const databaseURL = Deno.env.get("DATABASE");
 if (!databaseURL) throw new Error("NO DATABASE");
@@ -14,11 +14,17 @@ abstract class Base {
 class OpenAI extends Base {
   readonly #db = database.collection<OpenAISchema>("openai");
 
+  insert = async (value: OpenAISchema) => {
+    value.userid = this.identity
+    return await this.#db.insertOne(value)
+  }
+
   select = async () => {
-    return await this.#db.findOne({ userid: this.identity }) || {};
+    return await this.#db.findOne({ userid: this.identity });
   };
 
   update = async (value: OpenAISchema) => {
+    if(!await this.select()) this.insert({})
     return await this.#db.updateOne(
       { userid: this.identity },
       { $set: value },
@@ -45,14 +51,12 @@ export class Database {
 }
 
 interface UserSchema {
-  _id: ObjectId;
   userid: string;
   username: string;
   password: string;
 }
 
 interface OpenAISchema {
-  _id?: ObjectId;
   userid?: string;
   token?: string;
   baseurl?: string;

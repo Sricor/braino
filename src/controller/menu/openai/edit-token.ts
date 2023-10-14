@@ -7,7 +7,7 @@ class Handler extends Base {
     const database = this.instanceDatabase()?.openai;
 
     if (database) {
-      const data = await database.select();
+      const data = await database.select() || {};
       data.token = target;
       const { modifiedCount } = await database.update(data);
       if (modifiedCount === 1) {
