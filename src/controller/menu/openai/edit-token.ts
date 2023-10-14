@@ -3,12 +3,19 @@ import Base from "@controller/base.ts";
 
 class Handler extends Base {
   handleRequest = async () => {
-    const database = this.instantiateDatabase();
-    if (!database) return await this.context.reply("Error.");
-    const data = await database.openai.config.get() || {};
-    data.token = this.textParams[0];
-    database.openai.config.set(data);
-    await this.context.reply(`Set to ${this.textParams[0]}`);
+    const target = this.textMessageParams()[0];
+    const database = this.instanceDatabase()?.openai;
+
+    if (database) {
+      const data = await database.select();
+      data.token = target;
+      const { modifiedCount } = await database.update(data);
+      if (modifiedCount === 1) {
+        return await this.context.reply(`All set.`);
+      }
+    }
+
+    return await this.context.reply("Error.");
   };
 }
 

@@ -3,7 +3,7 @@ import Base from "@controller/base.ts";
 
 class Handler extends Base {
   handleRequest = async () => {
-    const openai = await this.instantiateOpenAI();
+    const openai = await this.instanceOpenAI();
     if (!openai) return this.context.reply("u have no openai token.");
     const content = this.context.message?.text || "Hello";
     const completion = await openai.chat.completions.create({

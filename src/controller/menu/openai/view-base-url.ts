@@ -3,10 +3,11 @@ import Base from "@controller/base.ts";
 
 class Handler extends Base {
   handleRequest = async () => {
-    const database = this.instantiateDatabase();
-    if (!database) return await this.editCallbackQueryText("Error.");
-    const data = await database.openai.config.get();
-    return await this.editCallbackQueryText(String(data?.baseURL));
+    const database = this.instanceDatabase()?.openai;
+    if (!database) return await this.context.reply("Error.");
+
+    const data = await database.select();
+    return await this.editCallbackQueryText(String(data.baseurl));
   };
 }
 
