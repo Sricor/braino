@@ -1,0 +1,8 @@
+{
+  "lock": false,
+  "importMap": "./deps.json",
+  "tasks": {
+    "server": "deno run --unstable --allow-read --allow-env --allow-net --allow-ffi --allow-write server.ts",
+    "dev": "deno run --watch --unstable --allow-read --allow-env --allow-net server.ts"
+  }
+}

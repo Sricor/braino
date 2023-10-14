@@ -1,0 +1,11 @@
+{
+  "imports": {
+    "grammy": "https://deno.land/x/grammy@v1.19.1/mod.ts",
+    "grammy_menu": "https://deno.land/x/grammy_menu@v1.2.1/mod.ts",
+
+    "@bot": "./src/bot.ts",
+    "@components/": "./src/components/",
+    "@controller/": "./src/controller/",
+    "@middleware/": "./src/middleware/"
+  }
+}
