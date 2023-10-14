@@ -7,7 +7,7 @@ class Handler extends Base {
     if (!database) return await this.context.reply("Error.");
 
     const data = await database.select();
-    return await this.editCallbackQueryText(String(data.baseurl));
+    return await this.editCallbackQueryText(String(data?.baseurl));
   };
 }
 

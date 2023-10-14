@@ -15,13 +15,11 @@ export default abstract class Base {
 
   protected readonly instanceOpenAI = async () => {
     const database = this.instanceDatabase();
-    if (database) {
-      const config = await database.openai.select();
-      if (config?.token) {
-        const openai = new OpenAI(config.token);
-        config.baseurl ? openai.baseURL = config.baseurl : undefined;
-        return openai;
-      }
+    const config = await database?.openai.select();
+    if (config?.token) {
+      const openai = new OpenAI(config.token);
+      config.baseurl ? openai.baseURL = config.baseurl : undefined;
+      return openai;
     }
   };
 
