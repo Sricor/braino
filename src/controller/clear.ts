@@ -3,11 +3,12 @@ import Base from "@controller/base.ts";
 
 class Handler extends Base {
   handleRequest = async () => {
-    const database = this.instanceDatabase()?.openai.chat;
-    const history = await database?.select()
-    if(history?.messages?.length === 0){ return this.context.reply("history is empty.")}
-    
-    const update = await database?.update({messages: []});
+    const history = await this.database.openai.chat?.select();
+    if (history?.messages?.length === 0) {
+      return this.context.reply("History is empty.");
+    }
+
+    const update = await this.database.openai.chat?.update({ messages: [] });
     if (update) {
       if (update.modifiedCount === 1) {
         return this.context.reply("Clear history message success.");

@@ -3,8 +3,7 @@ import Base from "@controller/base.ts";
 
 class Handler extends Base {
   handleRequest = async () => {
-    const data = await this.database.openai.select();
-    return await this.editCallbackQueryText(data?.baseurl || "NULL");
+    (await this.database.openai.chat.select())?.messages;
   };
 }
 
