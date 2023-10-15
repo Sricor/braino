@@ -33,6 +33,7 @@ bot.use(Menu.SettingMenu);
 
 // Command
 bot.command("start", Controller.Start);
+bot.command("clear", Controller.Clear);
 bot.command("settings", Controller.Setting);
 bot.command("userinfo", Controller.UserInfo);
 bot.command("base64decode", Controller.Base64Decode);
@@ -45,6 +46,7 @@ bot.command("editopenaibaseurl", Controller.EditOpenAIBaseUrl);
 
 await bot.api.setMyCommands([
   { command: "start", description: "Start the bot." },
+  { command: "clear", description: "Clear history chat." },
   { command: "settings", description: "Open settings." },
   { command: "userinfo", description: "User information." },
   { command: "base64decode", description: "base64Decode <content>." },

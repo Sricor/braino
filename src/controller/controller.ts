@@ -1,4 +1,5 @@
 import Chat from "@controller/chat.ts";
+import Clear from "@controller/clear.ts";
 import Start from "@controller/start.ts";
 import Setting from "@controller/user/setting.ts";
 import UserInfo from "@controller/user/info.ts";
@@ -16,6 +17,7 @@ export default {
   Base64Decode,
   Base64Encode,
   Chat,
+  Clear,
   HMACSHA256,
   Setting,
   SHA256,
