@@ -3,7 +3,7 @@ import Base from "@controller/base.ts";
 
 class Handler extends Base {
   handleRequest = async () => {
-    await this.context.reply(String(this.identity || 0));
+    await this.context.reply(JSON.stringify(this.context.from));
   };
 }
 

@@ -47,3 +47,4 @@ export default abstract class Base {
     throw Error(message);
   };
 }
+
