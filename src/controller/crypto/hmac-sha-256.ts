@@ -4,12 +4,15 @@ import Base from "@controller/base.ts";
 
 class Handler extends Base {
   handleRequest = async () => {
-    const params = this.textMessageParams()
-    if(params.length === 2){
-      const target = await digestMessageWithHMACSHA256(params[0].toString(), params[1].toString())
+    const params = this.textMessageParams();
+    if (params.length === 2) {
+      const target = await digestMessageWithHMACSHA256(
+        params[0].toString(),
+        params[1].toString(),
+      );
       return await this.context.reply(target);
     }
-    return await this.context.reply("Parameter error.")
+    return await this.context.reply("Parameter error.");
   };
 }
 
