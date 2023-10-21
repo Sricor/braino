@@ -63,14 +63,16 @@ class Handler extends Base {
     chat: ChatFields | undefined,
     existingChat: ChatFields | undefined,
   ): ChatFields => ({
-    model: chat?.model || existingChat?.model,
-    temperature: chat?.temperature === 0 ? 0 : existingChat?.temperature,
-    top_p: chat?.top_p === 0 ? 0 : existingChat?.top_p,
-    presence_penalty: chat?.presence_penalty === 0
-      ? 0
+    model: typeof chat?.model === "string" ? chat.model : existingChat?.model,
+    temperature: typeof chat?.temperature === "number"
+      ? chat.temperature
+      : existingChat?.temperature,
+    top_p: typeof chat?.top_p === "number" ? chat.top_p : existingChat?.top_p,
+    presence_penalty: typeof chat?.presence_penalty === "number"
+      ? chat.presence_penalty
       : existingChat?.presence_penalty,
-    frequency_penalty: chat?.frequency_penalty === 0
-      ? 0
+    frequency_penalty: typeof chat?.frequency_penalty === "number"
+      ? chat.frequency_penalty
       : existingChat?.frequency_penalty,
   });
 }

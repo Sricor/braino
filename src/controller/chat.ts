@@ -27,8 +27,11 @@ class Handler extends Base {
     // Chat
     const chat = await openai.chat.completions.create({
       model: config?.model || "gpt-3.5-turbo",
-      temperature: config?.temperature || 0.75,
       messages: listMessage,
+      temperature: config?.temperature || 0.75,
+      top_p: config?.top_p,
+      presence_penalty: config?.presence_penalty,
+      frequency_penalty: config?.frequency_penalty,
     });
 
     if (chat.error) {
