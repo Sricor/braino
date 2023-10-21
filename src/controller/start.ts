@@ -1,5 +1,5 @@
 import type { Context, NextFunction } from "@components/grammy.ts";
-import Base from "@controller/base.ts";
+import Base from "./base.ts";
 
 class Handler extends Base {
   handleRequest = async () => {

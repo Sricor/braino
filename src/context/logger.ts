@@ -5,8 +5,8 @@ export default async (context: Context, next: NextFunction): Promise<void> => {
   try {
     await next();
   } catch (err) {
-    console.log(err.message);
-    context.reply(err.message);
+    console.log(err.message || err);
+    context.reply(err.message || err);
   }
   const after = Date.now();
   console.log(`Response time: ${after - before} ms`);

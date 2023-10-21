@@ -1,32 +1,24 @@
-import { HTTPClient } from "@components/http.ts";
-
 export class OpenAI {
-  #token: string;
-  #baseURL = "https://api.openai.com";
+  api = "https://api.openai.com";
 
-  protected readonly client: HTTPClient;
+  constructor(readonly token: string) {}
 
-  constructor(token: string) {
-    this.#token = token;
-    this.client = new HTTPClient(this.#baseURL);
-  }
-
-  set token(token: string) {
-    this.#token = token;
-  }
-
-  set baseURL(baseURL: string) {
-    this.#baseURL = baseURL;
-    this.client.baseURL = this.#baseURL;
-  }
-
-  get baseURL() {
-    return this.#baseURL;
-  }
+  #request = async (
+    method: string,
+    path: string,
+    headers?: HeadersInit,
+    body?: BodyInit,
+  ) => {
+    return await fetch(`${this.api}${path}`, {
+      method: method,
+      headers: { ...headers, ...this.#defaultHeader() },
+      body: body,
+    });
+  };
 
   #defaultHeader() {
     return {
-      ...{ "Authorization": `Bearer ${this.#token}` },
+      ...{ "Authorization": `Bearer ${this.token}` },
       ...{ "Content-Type": "application/json" },
     };
   }
@@ -34,7 +26,8 @@ export class OpenAI {
   chat = {
     completions: {
       create: async (params: ChatCompletionsParams) => {
-        const response = await this.client.post(
+        const response = await this.#request(
+          "POST",
           "/v1/chat/completions",
           this.#defaultHeader(),
           JSON.stringify(params),
@@ -48,7 +41,7 @@ export class OpenAI {
 type Role = "system" | "user" | "assistant" | "function";
 type Model = "gpt-3.5-turbo" | "gpt-3.5-turbo-16k" | "gpt-4";
 
-interface Message {
+export interface Message {
   role: Role;
   content: string;
 }

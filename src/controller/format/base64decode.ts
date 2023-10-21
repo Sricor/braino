@@ -1,10 +1,14 @@
 import type { Context, NextFunction } from "@components/grammy.ts";
 import { base64decode } from "@components/utils.ts";
-import Base from "@controller/base.ts";
+import Base from "../base.ts";
 
 class Handler extends Base {
   handleRequest = async () => {
-    return await this.context.reply(base64decode(String(this.context.match)));
+    const content = this.context.match?.toString() || undefined;
+    if (content) {
+      return await this.context.reply(base64decode(content));
+    }
+    return await this.context.reply("Parameter error.");
   };
 }
 

@@ -1,4 +1,3 @@
-import { bot } from "@bot";
+import { braino } from "./src/main.ts";
 
-await bot.api.deleteWebhook();
-await bot.start();
+await braino.start();

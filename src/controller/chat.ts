@@ -1,22 +1,63 @@
 import type { Context, NextFunction } from "@components/grammy.ts";
-import Base from "@controller/base.ts";
+import Base from "./base.ts";
 
 class Handler extends Base {
-  handleRequest = async () => {
-    const openai = await this.instanceOpenAI();
-    if (!openai) return this.context.reply("u have no openai token.");
+  userMessage = this.context.message?.text || "Hello";
 
-    const content = this.context.message?.text || "Hello";
-    const messages = (await this.database.openai.chat.select())?.messages || [];
-    messages.push({ content: content, role: "user" });
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      temperature: 0.5,
-      messages: messages,
+  handleRequest = async () => {
+    // Chat with Large Language Model
+    const assistantMessage = await this.chatWithOpenAIChatGPT();
+
+    // Reply Message
+    this.context.reply(assistantMessage);
+  };
+
+  chatWithOpenAIChatGPT = async () => {
+    const openai = await this.instanceOpenAI();
+    if (!openai) return "No Token.";
+
+    // Get History
+    const listMessage = await this.#getHistoryMessages();
+    listMessage.push({ role: "user", content: this.userMessage });
+
+    // Get Chat Config
+    const config = (await this.database.OpenAIConfig.select(this.identity))
+      ?.chat;
+
+    // Chat
+    const chat = await openai.chat.completions.create({
+      model: config?.model || "gpt-3.5-turbo",
+      temperature: config?.temperature || 0.75,
+      messages: listMessage,
     });
-    messages.push(completion.choices[0].message);
-    await this.database.openai.chat.update({ messages: messages });
-    await this.context.reply(completion.choices[0].message.content);
+
+    if (chat.error) {
+      return String(JSON.stringify(chat.error, undefined, " "));
+    }
+
+    if (chat.choices) {
+      const assistantMessage = chat.choices[0].message.content;
+      listMessage.push({ role: "assistant", content: assistantMessage });
+      await this.database.ChatMessages.update({
+        userid: this.identity,
+        messages: listMessage,
+      });
+      return assistantMessage;
+    }
+
+    return "Something Error.";
+  };
+
+  #getHistoryMessages = async () => {
+    const history = await this.database.ChatMessages.select(this.identity);
+    if (!history) {
+      await this.database.ChatMessages.insert({ userid: this.identity });
+      return [];
+    }
+    if (!history.messages) {
+      history.messages = [];
+    }
+    return history.messages;
   };
 }
 

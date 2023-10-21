@@ -1,8 +1,8 @@
-const toUnit8Array = (data: string) => {
+export const toUnit8Array = (data: string) => {
   return new TextEncoder().encode(String(data));
 };
 
-const toHexString = (data: ArrayBuffer) => {
+export const toHexString = (data: ArrayBuffer) => {
   const u8Arr = Array.from(new Uint8Array(data));
   const hex = u8Arr.map((b) => b.toString(16).padStart(2, "0")).join(
     "",
@@ -45,4 +45,17 @@ export const base64decode = <S extends string>(data: S) => {
 
 export const base64encode = <S extends string>(data: S) => {
   return btoa(data);
+};
+
+export const hidePartialString = (
+  input: string,
+  start: number,
+  end: number,
+  replace = "*",
+): string => {
+  if (start < 0 || end > input.length || start >= end) return input;
+  const hiddenPart = replace.repeat(end - start);
+  const visiblePart = input.substring(0, start) + hiddenPart +
+    input.substring(end);
+  return visiblePart;
 };
