@@ -57,7 +57,7 @@ export class ChatClient {
     return data;
   };
 
-  update = async (item?: OpenAIClientSchema) => {
+  update = async (item?: ChatClientSchema) => {
     return await this.#database.update({
       ...await this.#config,
       ...item,
@@ -66,15 +66,21 @@ export class ChatClient {
   };
 
   selectMessages = async () => {
-    return (await this.#config).messages || [];
+    let messages = (await this.#config).messages;
+    if (typeof messages === "undefined") {
+      messages = [];
+      await this.update({ userid: this.identity, messages: messages });
+    }
+    return messages;
   };
 
   insertMessages = async (...items: ChatMessage[]) => {
-    return (await this.#config).messages?.push(...items);
+    const messages = await this.selectMessages();
+    return messages?.push(...items);
   };
 
   clearMessages = async () => {
-    const messages = (await this.#config).messages;
+    const messages = await this.selectMessages();
     if (messages && messages.length > 0) messages.length = 0;
   };
 }

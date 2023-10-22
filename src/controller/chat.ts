@@ -9,7 +9,7 @@ class Handler extends Core {
 
   handleRequest = async () => {
     // Chat with Large Language Model
-    this.userChatClient.insertMessages({
+    await this.userChatClient.insertMessages({
       role: "user",
       content: this.userMessage,
     });
