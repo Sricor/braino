@@ -66,12 +66,12 @@ export class ChatClient {
   };
 
   selectPrompt = async () => {
-    let prompt = (await this.#config).prompt;
-    if (typeof prompt === "undefined") {
-      prompt = [];
-      await this.update({ userid: this.identity, prompt: prompt });
+    let prompts = (await this.#config).prompts;
+    if (typeof prompts === "undefined") {
+      prompts = [];
+      await this.update({ userid: this.identity, prompts: prompts });
     }
-    return prompt;
+    return prompts;
   };
 
   selectMessages = async () => {

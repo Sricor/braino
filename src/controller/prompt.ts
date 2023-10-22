@@ -27,7 +27,7 @@ class Handler extends Core {
 
   handleParams = async (params: string) => {
     await this.chat.insertPrompt(params) ===
-        (await this.chat.config).prompt?.length
+        (await this.chat.config).prompts?.length
       ? await this.context.reply("All Set.")
       : await this.context.reply("Error.");
     await this.chat.update();
