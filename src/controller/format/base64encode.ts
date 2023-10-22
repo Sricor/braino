@@ -1,8 +1,8 @@
 import type { Context, NextFunction } from "@components/grammy.ts";
 import { base64encode } from "@components/utils.ts";
-import Base from "../base.ts";
+import { Core } from "../core.ts";
 
-class Handler extends Base {
+class Handler extends Core {
   handleRequest = async () => {
     const content = this.context.match?.toString() || undefined;
     if (content) {

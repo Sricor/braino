@@ -46,24 +46,26 @@ class OpenAIConfig {
 }
 
 interface Schema {
-  userid: number;
+  readonly userid: number;
 }
 
-interface ChatMessagesSchema extends Schema {
-  messages?: {
-    role: "system" | "user" | "assistant";
-    content: string;
-  }[];
+export interface Message {
+  readonly role: "system" | "user" | "assistant";
+  readonly content: string;
+}
+
+export interface ChatMessagesSchema extends Schema {
+  readonly messages?: Message[];
 }
 
 export interface OpenAIConfigSchema extends Schema {
-  api?: string;
-  token?: string;
-  chat?: {
-    model?: string;
-    temperature?: number;
-    top_p?: number;
-    presence_penalty?: number;
-    frequency_penalty?: number;
+  readonly api?: string;
+  readonly token?: string;
+  readonly chat?: {
+    readonly model?: string;
+    readonly temperature?: number;
+    readonly top_p?: number;
+    readonly presence_penalty?: number;
+    readonly frequency_penalty?: number;
   };
 }

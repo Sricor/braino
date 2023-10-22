@@ -1,7 +1,7 @@
 import type { Context, NextFunction } from "@components/grammy.ts";
-import Base from "./base.ts";
+import { Core } from "./core.ts";
 
-class Handler extends Base {
+class Handler extends Core {
   handleRequest = async () => {
     await this.context.reply("Hello! How can I assist you today?");
   };

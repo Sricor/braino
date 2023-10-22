@@ -6,6 +6,7 @@
 
     "@components/": "./src/components/",
     "@context": "./src/context/context.ts",
+    "@types": "./src/types.ts",
     "@controller": "./src/controller/controller.ts"
   }
 }

@@ -1,8 +1,8 @@
 import type { Context, NextFunction } from "@components/grammy.ts";
 import { digestMessageWithSHA256 } from "@components/utils.ts";
-import Base from "../base.ts";
+import { Core } from "../core.ts";
 
-class Handler extends Base {
+class Handler extends Core {
   handleRequest = async () => {
     const params = this.textMessageParams();
     if (params.length === 1) {

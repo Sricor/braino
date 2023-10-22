@@ -26,6 +26,7 @@ export class OpenAI {
   chat = {
     completions: {
       create: async (params: ChatCompletionsParams) => {
+        console.log(params);
         const response = await this.#request(
           "POST",
           "/v1/chat/completions",

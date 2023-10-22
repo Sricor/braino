@@ -1,37 +1,36 @@
 import type { Context, NextFunction } from "@components/grammy.ts";
 import type { OpenAIConfigSchema } from "@components/mongo.ts";
-import Base from "./base.ts";
+import { Core, OpenAIClinet } from "./core.ts";
 
 type ChatFields = OpenAIConfigSchema["chat"];
 
-class Handler extends Base {
-  handleRequest = async (): Promise<void> => {
+class Handler extends Core {
+  openaiClient = new OpenAIClinet(this.identity);
+
+  handleRequest = async () => {
     const params = this.context.match?.toString();
-    const existingConfig = await this.database.OpenAIConfig.select(
-      this.identity,
-    );
 
     if (params) {
-      this.handleParams(params, existingConfig);
+      await this.handleParams(params);
     } else {
-      this.handleNoParams(existingConfig);
+      await this.handleNoParams();
     }
   };
 
-  handleNoParams = (existingConfig: OpenAIConfigSchema | undefined): void => {
-    if (existingConfig) {
+  handleNoParams = async () => {
+    const config = await this.openaiClient.config;
+    if (config) {
       this.context.reply(
-        JSON.stringify(existingConfig, undefined, " "),
+        JSON.stringify(config, undefined, " "),
       );
     } else {
       this.context.reply("NULL");
     }
   };
 
-  handleParams = (
+  handleParams = async (
     params: string,
-    existingConfig: OpenAIConfigSchema | undefined,
-  ): void => {
+  ) => {
     let paramsJSON: OpenAIConfigSchema;
     try {
       paramsJSON = JSON.parse(params);
@@ -41,7 +40,7 @@ class Handler extends Base {
     }
 
     const { api, token, chat } = paramsJSON;
-    const chatFields = this.mergeChatFields(chat, existingConfig?.chat);
+    const chatFields = await this.mergeChatFields(chat);
 
     const updatedConfig: OpenAIConfigSchema = {
       userid: this.identity,
@@ -50,35 +49,32 @@ class Handler extends Base {
       chat: chatFields,
     };
 
-    if (!existingConfig) {
-      this.database.OpenAIConfig.insert(updatedConfig);
-    } else {
-      this.database.OpenAIConfig.update(updatedConfig);
-    }
-
+    await this.openaiClient.update(updatedConfig);
     this.context.reply("All Set.");
   };
 
-  mergeChatFields = (
+  mergeChatFields = async (
     targetChat: ChatFields | undefined,
-    existingChat: ChatFields | undefined,
-  ): ChatFields => ({
-    model: typeof targetChat?.model === "string"
-      ? targetChat.model
-      : existingChat?.model,
-    temperature: typeof targetChat?.temperature === "number"
-      ? targetChat.temperature
-      : existingChat?.temperature,
-    top_p: typeof targetChat?.top_p === "number"
-      ? targetChat.top_p
-      : existingChat?.top_p,
-    presence_penalty: typeof targetChat?.presence_penalty === "number"
-      ? targetChat.presence_penalty
-      : existingChat?.presence_penalty,
-    frequency_penalty: typeof targetChat?.frequency_penalty === "number"
-      ? targetChat.frequency_penalty
-      : existingChat?.frequency_penalty,
-  });
+  ): Promise<ChatFields> => {
+    const config = (await this.openaiClient.config).chat;
+    return {
+      model: typeof targetChat?.model === "string"
+        ? targetChat.model
+        : config?.model,
+      temperature: typeof targetChat?.temperature === "number"
+        ? targetChat.temperature
+        : config?.temperature,
+      top_p: typeof targetChat?.top_p === "number"
+        ? targetChat.top_p
+        : config?.top_p,
+      presence_penalty: typeof targetChat?.presence_penalty === "number"
+        ? targetChat.presence_penalty
+        : config?.presence_penalty,
+      frequency_penalty: typeof targetChat?.frequency_penalty === "number"
+        ? targetChat.frequency_penalty
+        : config?.frequency_penalty,
+    };
+  };
 }
 
 export default async (context: Context, _next: NextFunction): Promise<void> => {
