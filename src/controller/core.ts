@@ -105,6 +105,11 @@ export class ChatClient {
     return await this.insertMessages({ role: "system", content: content });
   };
 
+  clearPrompt = async () => {
+    const prompt = await this.selectPrompt();
+    if (prompt && prompt.length > 0) prompt.length = 0;
+  };
+
   clearMessages = async () => {
     const messages = await this.selectMessages();
     if (messages && messages.length > 0) messages.length = 0;

@@ -5,8 +5,34 @@ class Handler extends Core {
   chatClient = new ChatClient(this.identity);
 
   handleRequest = async () => {
-    const history = await this.chatClient.selectMessages();
-    if (history.length === 0) {
+    const params = this.textMessageParams();
+    switch (params[0]) {
+      case "prompt":
+        return await this.clearPrompt();
+      default:
+        return await this.clearMessages();
+    }
+  };
+
+  clearPrompt = async () => {
+    const prompt = await this.chatClient.selectPrompt();
+    if (prompt.length === 0) {
+      return this.context.reply("Prompt is empty.");
+    }
+
+    await this.chatClient.clearPrompt();
+    const update = await this.chatClient.update();
+    if (update) {
+      if (update.modifiedCount === 1) {
+        return this.context.reply("Clear prompt success.");
+      }
+    }
+    return this.context.reply("Error.");
+  };
+
+  clearMessages = async () => {
+    const messages = await this.chatClient.selectMessages();
+    if (messages.length === 0) {
       return this.context.reply("History is empty.");
     }
 

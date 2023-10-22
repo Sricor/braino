@@ -15,6 +15,8 @@ class Handler extends Core {
 
   handleNoParams = async () => {
     const prompt = await this.chat.selectPrompt();
+    if (prompt.length === 0) return this.context.reply("Prompt is empty.");
+
     let result = `Chat Prompt: \n`;
     prompt.forEach((element, index) => {
       const formattedValue = `\n Prompt${index + 1}: ${element} \n`;
