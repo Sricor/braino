@@ -20,28 +20,28 @@ export class Database {
 }
 
 class ChatMessages {
-  readonly #collection: Collection<ChatMessagesSchema>;
+  readonly #collection: Collection<ChatClientSchema>;
   constructor(db: MonDB, name: string) {
-    this.#collection = db.collection<ChatMessagesSchema>(name);
+    this.#collection = db.collection<ChatClientSchema>(name);
   }
 
   select = async (id: number) => await this.#collection.findOne({ userid: id });
-  insert = async (data: ChatMessagesSchema) =>
+  insert = async (data: ChatClientSchema) =>
     await this.#collection.insertOne(data);
-  update = async (data: ChatMessagesSchema) =>
+  update = async (data: ChatClientSchema) =>
     await this.#collection.updateOne({ userid: data.userid }, { $set: data });
 }
 
 class OpenAIConfig {
-  readonly #collection: Collection<OpenAIConfigSchema>;
+  readonly #collection: Collection<OpenAIClientSchema>;
   constructor(db: MonDB, name: string) {
-    this.#collection = db.collection<OpenAIConfigSchema>(name);
+    this.#collection = db.collection<OpenAIClientSchema>(name);
   }
 
   select = async (id: number) => await this.#collection.findOne({ userid: id });
-  insert = async (data: OpenAIConfigSchema) =>
+  insert = async (data: OpenAIClientSchema) =>
     await this.#collection.insertOne(data);
-  update = async (data: OpenAIConfigSchema) =>
+  update = async (data: OpenAIClientSchema) =>
     await this.#collection.updateOne({ userid: data.userid }, { $set: data });
 }
 
@@ -49,16 +49,16 @@ interface Schema {
   readonly userid: number;
 }
 
-export interface Message {
+export interface ChatMessage {
   readonly role: "system" | "user" | "assistant";
   readonly content: string;
 }
 
-export interface ChatMessagesSchema extends Schema {
-  readonly messages?: Message[];
+export interface ChatClientSchema extends Schema {
+  readonly messages?: ChatMessage[];
 }
 
-export interface OpenAIConfigSchema extends Schema {
+export interface OpenAIClientSchema extends Schema {
   readonly api?: string;
   readonly token?: string;
   readonly chat?: {

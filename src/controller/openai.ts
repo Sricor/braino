@@ -1,8 +1,8 @@
 import type { Context, NextFunction } from "@components/grammy.ts";
-import type { OpenAIConfigSchema } from "@components/mongo.ts";
+import type { OpenAIClientSchema } from "@components/mongo.ts";
 import { Core, OpenAIClinet } from "./core.ts";
 
-type ChatFields = OpenAIConfigSchema["chat"];
+type ChatFields = OpenAIClientSchema["chat"];
 
 class Handler extends Core {
   openaiClient = new OpenAIClinet(this.identity);
@@ -31,7 +31,7 @@ class Handler extends Core {
   handleParams = async (
     params: string,
   ) => {
-    let paramsJSON: OpenAIConfigSchema;
+    let paramsJSON: OpenAIClientSchema;
     try {
       paramsJSON = JSON.parse(params);
     } catch {
@@ -42,7 +42,7 @@ class Handler extends Core {
     const { api, token, chat } = paramsJSON;
     const chatFields = await this.mergeChatFields(chat);
 
-    const updatedConfig: OpenAIConfigSchema = {
+    const updatedConfig: OpenAIClientSchema = {
       userid: this.identity,
       api,
       token,

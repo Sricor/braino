@@ -1,8 +1,8 @@
 import type { Context } from "@components/grammy.ts";
 import type {
-  ChatMessagesSchema,
-  Message,
-  OpenAIConfigSchema,
+  ChatClientSchema,
+  ChatMessage,
+  OpenAIClientSchema,
 } from "@components/mongo.ts";
 import { Database } from "@components/mongo.ts";
 import { OpenAI } from "@components/openai.ts";
@@ -38,7 +38,7 @@ export abstract class Core {
 // User Chat Client
 export class ChatClient {
   readonly #database = Database.instance().ChatMessages;
-  readonly #config: Promise<ChatMessagesSchema>;
+  readonly #config: Promise<ChatClientSchema>;
 
   constructor(private readonly identity: number) {
     this.#config = this.#getConfig();
@@ -57,7 +57,7 @@ export class ChatClient {
     return data;
   };
 
-  update = async (item?: ChatMessagesSchema) => {
+  update = async (item?: OpenAIClientSchema) => {
     return await this.#database.update({
       ...await this.#config,
       ...item,
@@ -69,7 +69,7 @@ export class ChatClient {
     return (await this.#config).messages || [];
   };
 
-  insertMessages = async (...items: Message[]) => {
+  insertMessages = async (...items: ChatMessage[]) => {
     return (await this.#config).messages?.push(...items);
   };
 
@@ -82,7 +82,7 @@ export class ChatClient {
 // User OpenAI Client
 export class OpenAIClinet {
   readonly #database = Database.instance().OpenAIConfig;
-  readonly #config: Promise<OpenAIConfigSchema>;
+  readonly #config: Promise<OpenAIClientSchema>;
 
   constructor(private readonly identity: number) {
     this.#config = this.#getConfig();
@@ -111,7 +111,7 @@ export class OpenAIClinet {
     return openai;
   };
 
-  update = async (item?: OpenAIConfigSchema) => {
+  update = async (item?: OpenAIClientSchema) => {
     return await this.#database.update({
       ...await this.#config,
       ...item,
@@ -119,7 +119,7 @@ export class OpenAIClinet {
     });
   };
 
-  chat = async (messages: Message[]) => {
+  chat = async (messages: ChatMessage[]) => {
     const openai = await this.#getOpenAI();
     const config = (await this.#config).chat;
     return await openai.chat.completions.create({
