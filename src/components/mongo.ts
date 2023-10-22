@@ -55,6 +55,7 @@ export interface ChatMessage {
 }
 
 export interface ChatClientSchema extends Schema {
+  readonly prompt?: string[];
   readonly messages?: ChatMessage[];
 }
 

@@ -5,14 +5,10 @@ class Handler extends Core {
   userChatClient = new ChatClient(this.identity);
   openaiClient = new OpenAIClinet(this.identity);
 
-  userMessage = this.context.message?.text || "Hello";
-
   handleRequest = async () => {
     // Chat with Large Language Model
-    await this.userChatClient.insertMessages({
-      role: "user",
-      content: this.userMessage,
-    });
+    const userMessage = this.context.message?.text || "Hello";
+    await this.userChatClient.insertUserMessage(userMessage);
     const assistantMessage = await this.chatWithOpenAIChatGPT();
 
     // Reply Message
@@ -22,9 +18,8 @@ class Handler extends Core {
 
   chatWithOpenAIChatGPT = async () => {
     // Get History
-    const chat = await this.openaiClient.chat(
-      await this.userChatClient.selectMessages(),
-    );
+    const message = await this.userChatClient.selectMessages()
+    const chat = await this.openaiClient.chat(message);
 
     if (chat.error) {
       return String(JSON.stringify(chat.error, undefined, " "));
@@ -32,10 +27,7 @@ class Handler extends Core {
 
     if (chat.choices) {
       const assistantMessage = chat.choices[0].message.content;
-      await this.userChatClient.insertMessages({
-        role: "assistant",
-        content: assistantMessage,
-      });
+      await this.userChatClient.insertAssistantMessage(assistantMessage);
       return assistantMessage;
     }
 

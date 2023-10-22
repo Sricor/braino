@@ -65,6 +65,15 @@ export class ChatClient {
     });
   };
 
+  selectPrompt = async () => {
+    let prompt = (await this.#config).prompt;
+    if (typeof prompt === "undefined") {
+      prompt = [];
+      await this.update({ userid: this.identity, prompt: prompt });
+    }
+    return prompt;
+  };
+
   selectMessages = async () => {
     let messages = (await this.#config).messages;
     if (typeof messages === "undefined") {
@@ -77,6 +86,18 @@ export class ChatClient {
   insertMessages = async (...items: ChatMessage[]) => {
     const messages = await this.selectMessages();
     return messages?.push(...items);
+  };
+
+  insertUserMessage = async (content: string) => {
+    return await this.insertMessages({ role: "user", content: content });
+  };
+
+  insertAssistantMessage = async (content: string) => {
+    return await this.insertMessages({ role: "assistant", content: content });
+  };
+
+  insertSystemMessage = async (content: string) => {
+    return await this.insertMessages({ role: "system", content: content });
   };
 
   clearMessages = async () => {
