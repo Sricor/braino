@@ -22,6 +22,7 @@ export class Braino {
     this.#core.command("me", Controller.Me);
     this.#core.command("start", Controller.Start);
     this.#core.command("clear", Controller.Clear);
+    this.#core.command("prompt", Controller.Prompt);
     this.#core.command("openai", Controller.OpenAI);
     this.#core.command("base64decode", Controller.Base64Decode);
     this.#core.command("base64encode", Controller.Base64Encode);
@@ -33,8 +34,9 @@ export class Braino {
     await this.#core.api.setMyCommands([
       { command: "me", description: "Information about me." },
       { command: "start", description: "Start the bot." },
-      { command: "openai", description: "Edit OpenAI" },
       { command: "clear", description: "Clear history chat." },
+      { command: "prompt", description: "add/view prompt" },
+      { command: "openai", description: "Edit OpenAI" },
       { command: "base64decode", description: "base64Decode <content>." },
       { command: "base64encode", description: "base64Encode <content>." },
       { command: "sha256", description: "SHA256 <message>." },

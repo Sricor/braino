@@ -83,9 +83,14 @@ export class ChatClient {
     return messages;
   };
 
+  insertPrompt = async (...items: string[]) => {
+    const prompt = await this.selectPrompt();
+    return prompt.push(...items);
+  };
+
   insertMessages = async (...items: ChatMessage[]) => {
     const messages = await this.selectMessages();
-    return messages?.push(...items);
+    return messages.push(...items);
   };
 
   insertUserMessage = async (content: string) => {

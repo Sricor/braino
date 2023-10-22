@@ -18,7 +18,7 @@ class Handler extends Core {
 
   chatWithOpenAIChatGPT = async () => {
     // Get History
-    const message = await this.userChatClient.selectMessages()
+    const message = await this.userChatClient.selectMessages();
     const chat = await this.openaiClient.chat(message);
 
     if (chat.error) {
