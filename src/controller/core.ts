@@ -107,7 +107,15 @@ export class OpenAIClinet {
     return data;
   };
 
-  #getOpenAI = async () => {
+  update = async (item?: OpenAIClientSchema) => {
+    return await this.#database.update({
+      ...await this.#config,
+      ...item,
+      ...{ userid: this.identity },
+    });
+  };
+
+  #instanOpenAI = async () => {
     const config = await this.#config;
     if (!config?.token) throw Error("Get OpenAI Error.");
 
@@ -117,16 +125,8 @@ export class OpenAIClinet {
     return openai;
   };
 
-  update = async (item?: OpenAIClientSchema) => {
-    return await this.#database.update({
-      ...await this.#config,
-      ...item,
-      ...{ userid: this.identity },
-    });
-  };
-
   chat = async (messages: ChatMessage[]) => {
-    const openai = await this.#getOpenAI();
+    const openai = await this.#instanOpenAI();
     const config = (await this.#config).chat;
     return await openai.chat.completions.create({
       model: config?.model || "gpt-3.5-turbo",
