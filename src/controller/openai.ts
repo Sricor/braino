@@ -60,19 +60,23 @@ class Handler extends Base {
   };
 
   mergeChatFields = (
-    chat: ChatFields | undefined,
+    targetChat: ChatFields | undefined,
     existingChat: ChatFields | undefined,
   ): ChatFields => ({
-    model: typeof chat?.model === "string" ? chat.model : existingChat?.model,
-    temperature: typeof chat?.temperature === "number"
-      ? chat.temperature
+    model: typeof targetChat?.model === "string"
+      ? targetChat.model
+      : existingChat?.model,
+    temperature: typeof targetChat?.temperature === "number"
+      ? targetChat.temperature
       : existingChat?.temperature,
-    top_p: typeof chat?.top_p === "number" ? chat.top_p : existingChat?.top_p,
-    presence_penalty: typeof chat?.presence_penalty === "number"
-      ? chat.presence_penalty
+    top_p: typeof targetChat?.top_p === "number"
+      ? targetChat.top_p
+      : existingChat?.top_p,
+    presence_penalty: typeof targetChat?.presence_penalty === "number"
+      ? targetChat.presence_penalty
       : existingChat?.presence_penalty,
-    frequency_penalty: typeof chat?.frequency_penalty === "number"
-      ? chat.frequency_penalty
+    frequency_penalty: typeof targetChat?.frequency_penalty === "number"
+      ? targetChat.frequency_penalty
       : existingChat?.frequency_penalty,
   });
 }

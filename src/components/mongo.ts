@@ -49,13 +49,11 @@ interface Schema {
   userid: number;
 }
 
-interface Message {
-  role: "system" | "user" | "assistant";
-  content: string;
-}
-
 interface ChatMessagesSchema extends Schema {
-  messages?: Message[];
+  messages?: {
+    role: "system" | "user" | "assistant";
+    content: string;
+  }[];
 }
 
 export interface OpenAIConfigSchema extends Schema {
