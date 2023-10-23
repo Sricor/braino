@@ -1,7 +1,7 @@
 import type { Context } from "@components/grammy.ts";
 import type {
   ChatClientSchema,
-  ChatMessage,
+  Message,
   OpenAIClientSchema,
 } from "@components/mongo.ts";
 import { Database } from "@components/mongo.ts";
@@ -37,18 +37,18 @@ export abstract class Core {
 
 // User Chat Client
 export class ChatClient {
-  readonly #database = Database.instance().ChatMessages;
-  readonly #config: Promise<ChatClientSchema>;
+  readonly #database = Database.instance().ChatClientDatabase;
+  readonly #schema: Promise<ChatClientSchema>;
 
   constructor(private readonly identity: number) {
-    this.#config = this.#getConfig();
+    this.#schema = this.#getSchema();
   }
 
-  get config() {
-    return this.#config;
+  get schema() {
+    return this.#schema;
   }
 
-  #getConfig = async () => {
+  #getSchema = async () => {
     let data = await this.#database.select(this.identity);
     if (!data) {
       data = { userid: this.identity };
@@ -59,14 +59,14 @@ export class ChatClient {
 
   update = async (item?: ChatClientSchema) => {
     return await this.#database.update({
-      ...await this.#config,
+      ...await this.#schema,
       ...item,
       ...{ userid: this.identity },
     });
   };
 
   selectPrompt = async () => {
-    let prompts = (await this.#config).prompts;
+    let prompts = (await this.#schema).prompts;
     if (typeof prompts === "undefined") {
       prompts = [];
       await this.update({ userid: this.identity, prompts: prompts });
@@ -75,7 +75,7 @@ export class ChatClient {
   };
 
   selectMessages = async () => {
-    let messages = (await this.#config).messages;
+    let messages = (await this.#schema).messages;
     if (typeof messages === "undefined") {
       messages = [];
       await this.update({ userid: this.identity, messages: messages });
@@ -88,7 +88,7 @@ export class ChatClient {
     return prompt.push(...items);
   };
 
-  insertMessages = async (...items: ChatMessage[]) => {
+  insertMessages = async (...items: Message[]) => {
     const messages = await this.selectMessages();
     return messages.push(...items);
   };
@@ -118,18 +118,18 @@ export class ChatClient {
 
 // User OpenAI Client
 export class OpenAIClinet {
-  readonly #database = Database.instance().OpenAIConfig;
-  readonly #config: Promise<OpenAIClientSchema>;
+  readonly #database = Database.instance().OpenAIClientDatabase;
+  readonly #schema: Promise<OpenAIClientSchema>;
 
   constructor(private readonly identity: number) {
-    this.#config = this.#getConfig();
+    this.#schema = this.#getSchema();
   }
 
-  get config() {
-    return this.#config;
+  get schema() {
+    return this.#schema;
   }
 
-  #getConfig = async () => {
+  #getSchema = async () => {
     let data = await this.#database.select(this.identity);
     if (!data) {
       data = { userid: this.identity };
@@ -140,14 +140,14 @@ export class OpenAIClinet {
 
   update = async (item?: OpenAIClientSchema) => {
     return await this.#database.update({
-      ...await this.#config,
+      ...await this.#schema,
       ...item,
       ...{ userid: this.identity },
     });
   };
 
   #instanOpenAI = async () => {
-    const config = await this.#config;
+    const config = await this.#schema;
     if (!config?.token) throw Error("Get OpenAI Error.");
 
     const openai = new OpenAI(config.token);
@@ -156,9 +156,9 @@ export class OpenAIClinet {
     return openai;
   };
 
-  chat = async (messages: ChatMessage[]) => {
+  chat = async (messages: Message[]) => {
     const openai = await this.#instanOpenAI();
-    const config = (await this.#config).chat;
+    const config = (await this.#schema).chat;
     return await openai.chat.completions.create({
       model: config?.model || "gpt-3.5-turbo",
       messages: messages,

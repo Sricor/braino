@@ -15,11 +15,17 @@ export class Database {
   private constructor() {}
   readonly #database = Database.#client.database("content");
 
-  readonly ChatMessages = new ChatMessages(this.#database, "chat-messages");
-  readonly OpenAIConfig = new OpenAIConfig(this.#database, "openai-config");
+  readonly ChatClientDatabase = new ChatClientDatabase(
+    this.#database,
+    "chat-messages",
+  );
+  readonly OpenAIClientDatabase = new OpenAIClientDatabase(
+    this.#database,
+    "openai-config",
+  );
 }
 
-class ChatMessages {
+class ChatClientDatabase {
   readonly #collection: Collection<ChatClientSchema>;
   constructor(db: MonDB, name: string) {
     this.#collection = db.collection<ChatClientSchema>(name);
@@ -32,7 +38,7 @@ class ChatMessages {
     await this.#collection.updateOne({ userid: data.userid }, { $set: data });
 }
 
-class OpenAIConfig {
+class OpenAIClientDatabase {
   readonly #collection: Collection<OpenAIClientSchema>;
   constructor(db: MonDB, name: string) {
     this.#collection = db.collection<OpenAIClientSchema>(name);
@@ -49,14 +55,14 @@ interface Schema {
   readonly userid: number;
 }
 
-export interface ChatMessage {
+export interface Message {
   readonly role: "system" | "user" | "assistant";
   readonly content: string;
 }
 
 export interface ChatClientSchema extends Schema {
   readonly prompts?: string[];
-  readonly messages?: ChatMessage[];
+  readonly messages?: Message[];
 }
 
 export interface OpenAIClientSchema extends Schema {

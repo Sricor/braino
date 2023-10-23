@@ -5,7 +5,7 @@ import { Core, OpenAIClinet } from "./core.ts";
 type ChatFields = OpenAIClientSchema["chat"];
 
 class Handler extends Core {
-  openaiClient = new OpenAIClinet(this.identity);
+  readonly #openai = new OpenAIClinet(this.identity);
 
   handleRequest = async () => {
     const params = this.context.match?.toString();
@@ -18,7 +18,7 @@ class Handler extends Core {
   };
 
   handleNoParams = async () => {
-    const config = await this.openaiClient.config;
+    const config = await this.#openai.schema;
     if (config) {
       this.context.reply(
         JSON.stringify(config, undefined, " "),
@@ -49,14 +49,14 @@ class Handler extends Core {
       chat: chatFields,
     };
 
-    await this.openaiClient.update(updatedConfig);
+    await this.#openai.update(updatedConfig);
     this.context.reply("All Set.");
   };
 
   mergeChatFields = async (
     targetChat: ChatFields | undefined,
   ): Promise<ChatFields> => {
-    const config = (await this.openaiClient.config).chat;
+    const config = (await this.#openai.schema).chat;
     return {
       model: typeof targetChat?.model === "string"
         ? targetChat.model

@@ -2,7 +2,7 @@ import type { Context, NextFunction } from "@components/grammy.ts";
 import { ChatClient, Core } from "./core.ts";
 
 class Handler extends Core {
-  chatClient = new ChatClient(this.identity);
+  readonly #chat = new ChatClient(this.identity);
 
   handleRequest = async () => {
     const params = this.textMessageParams();
@@ -15,13 +15,13 @@ class Handler extends Core {
   };
 
   clearPrompt = async () => {
-    const prompt = await this.chatClient.selectPrompt();
+    const prompt = await this.#chat.selectPrompt();
     if (prompt.length === 0) {
       return this.context.reply("Prompt is empty.");
     }
 
-    await this.chatClient.clearPrompt();
-    const update = await this.chatClient.update();
+    await this.#chat.clearPrompt();
+    const update = await this.#chat.update();
     if (update) {
       if (update.modifiedCount === 1) {
         return this.context.reply("Clear prompt success.");
@@ -31,13 +31,13 @@ class Handler extends Core {
   };
 
   clearMessages = async () => {
-    const messages = await this.chatClient.selectMessages();
+    const messages = await this.#chat.selectMessages();
     if (messages.length === 0) {
       return this.context.reply("History is empty.");
     }
 
-    await this.chatClient.clearMessages();
-    const update = await this.chatClient.update();
+    await this.#chat.clearMessages();
+    const update = await this.#chat.update();
     if (update) {
       if (update.modifiedCount === 1) {
         return this.context.reply("Clear history message success.");
