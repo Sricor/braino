@@ -1,7 +1,7 @@
 import { Collection, Database as MonDB, MongoClient } from "mongo";
 
 export class Database {
-  static #client = new MongoClient();
+  static readonly #client = new MongoClient();
   static #instance: Database;
 
   static instance = () => {
@@ -25,30 +25,24 @@ export class Database {
   );
 }
 
-class ChatClientDatabase {
-  readonly #collection: Collection<ChatClientSchema>;
+abstract class ClientDatabase<T extends Schema> {
+  protected readonly collection: Collection<T>;
   constructor(db: MonDB, name: string) {
-    this.#collection = db.collection<ChatClientSchema>(name);
+    this.collection = db.collection<T>(name);
   }
-
-  select = async (id: number) => await this.#collection.findOne({ userid: id });
-  insert = async (data: ChatClientSchema) =>
-    await this.#collection.insertOne(data);
-  update = async (data: ChatClientSchema) =>
-    await this.#collection.updateOne({ userid: data.userid }, { $set: data });
+  insert = async (data: T) => await this.collection.insertOne(data);
 }
 
-class OpenAIClientDatabase {
-  readonly #collection: Collection<OpenAIClientSchema>;
-  constructor(db: MonDB, name: string) {
-    this.#collection = db.collection<OpenAIClientSchema>(name);
-  }
+class ChatClientDatabase extends ClientDatabase<ChatClientSchema> {
+  select = async (id: number) => await this.collection.findOne({ userid: id });
+  update = async (data: ChatClientSchema) =>
+    await this.collection.updateOne({ userid: data.userid }, { $set: data });
+}
 
-  select = async (id: number) => await this.#collection.findOne({ userid: id });
-  insert = async (data: OpenAIClientSchema) =>
-    await this.#collection.insertOne(data);
-  update = async (data: OpenAIClientSchema) =>
-    await this.#collection.updateOne({ userid: data.userid }, { $set: data });
+class OpenAIClientDatabase extends ClientDatabase<OpenAIClientSchema> {
+  select = async (id: number) => await this.collection.findOne({ userid: id });
+  update = async (data: ChatClientSchema) =>
+    await this.collection.updateOne({ userid: data.userid }, { $set: data });
 }
 
 interface Schema {

@@ -1,11 +1,12 @@
 import type { Context } from "@components/grammy.ts";
+import type { Message } from "@components/mongo.ts";
 import type {
   ChatClientSchema,
-  Message,
   OpenAIClientSchema,
 } from "@components/mongo.ts";
 import { Database } from "@components/mongo.ts";
 import { OpenAI } from "@components/openai.ts";
+import { ClientError } from "@components/errors.ts";
 
 export abstract class Core {
   protected readonly identity: number;
@@ -15,9 +16,8 @@ export abstract class Core {
   }
 
   #getIndentity = () => {
-    return this.context.from?.id
-      ? this.context.from.id
-      : this.throwError("Access denied.");
+    if (!this.context.from?.id) throw new ClientError("Access denied.");
+    return this.context.from.id;
   };
 
   protected textMessageParams = () => {
@@ -148,15 +148,18 @@ export class OpenAIClinet {
 
   #instanOpenAI = async () => {
     const config = await this.#schema;
-    if (!config?.token) throw Error("Get OpenAI Error.");
+    if (!config?.token) {
+      throw new ClientError("You haven't provided OpenAI token.");
+    }
 
     const openai = new OpenAI(config.token);
-    config.api ? openai.api = config.api : null;
+    config.api ? openai.api = config.api : undefined;
 
     return openai;
   };
 
   chat = async (messages: Message[]) => {
+    if (messages.length === 0) throw new ClientError("Chat messages is empty.");
     const openai = await this.#instanOpenAI();
     const config = (await this.#schema).chat;
     return await openai.chat.completions.create({
