@@ -117,7 +117,7 @@ export class ChatClient {
 }
 
 // User OpenAI Client
-export class OpenAIClinet {
+export class OpenAIClient {
   readonly #database = Database.instance().OpenAIClientDatabase;
   readonly #schema: Promise<OpenAIClientSchema>;
 

@@ -1,9 +1,10 @@
 import type { Context, NextFunction } from "@components/grammy.ts";
-import { ChatClient, Core, OpenAIClinet } from "./core.ts";
+import { ChatClient, Core, OpenAIClient } from "./core.ts";
+import { ClientError } from "@components/errors.ts";
 
 class Handler extends Core {
   readonly #chat = new ChatClient(this.identity);
-  readonly #openai = new OpenAIClinet(this.identity);
+  readonly #openai = new OpenAIClient(this.identity);
 
   handleRequest = async () => {
     // Chat with Large Language Model
@@ -36,17 +37,15 @@ class Handler extends Core {
     await this.#chat.insertUserMessage(content);
 
     // Response Messages
-    if (response.error) {
-      return String(JSON.stringify(response.error, undefined, " "));
-    }
-
     if (response.choices) {
       const assistantMessage = response.choices[0].message.content;
       await this.#chat.insertAssistantMessage(assistantMessage);
       return assistantMessage;
     }
 
-    return "Something Error.";
+    throw new ClientError(
+      JSON.stringify(response.error, undefined, " ") || "Error.",
+    );
   };
 }
 

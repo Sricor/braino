@@ -1,11 +1,11 @@
 import type { Context, NextFunction } from "@components/grammy.ts";
 import type { OpenAIClientSchema } from "@components/mongo.ts";
-import { Core, OpenAIClinet } from "./core.ts";
+import { Core, OpenAIClient } from "./core.ts";
 
 type ChatFields = OpenAIClientSchema["chat"];
 
 class Handler extends Core {
-  readonly #openai = new OpenAIClinet(this.identity);
+  readonly #openai = new OpenAIClient(this.identity);
 
   handleRequest = async () => {
     const params = this.context.match?.toString();
