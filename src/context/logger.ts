@@ -7,12 +7,14 @@ export default async (context: Context, next: NextFunction): Promise<void> => {
   try {
     await next();
   } catch (err) {
-    logger.error(err.message || err)
+    logger.error(err.message || err);
     if (err instanceof ClientError) {
       context.reply(err.message);
     }
   }
   const after = Date.now();
 
-  logger.info(`${context.from?.id} Response time: ${after - before} ms`);
+  logger.info(
+    `User identity: ${context.from?.id} Response time: ${after - before} ms`,
+  );
 };

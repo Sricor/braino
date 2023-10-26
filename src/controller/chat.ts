@@ -30,11 +30,7 @@ class Handler extends Core {
     const response = await this.#openai.chat(messages);
 
     // Remove Prompt Messages
-    messages.pop();
-    prompt.forEach(() => {
-      messages.pop();
-    });
-    await this.#chat.insertUserMessage(content);
+    messages.splice(messages.length - (prompt.length + 1), prompt.length);
 
     // Response Messages
     if (response.choices) {

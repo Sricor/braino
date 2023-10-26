@@ -3,8 +3,8 @@ import * as log from "log";
 log.setup({
   handlers: {
     console: new log.handlers.ConsoleHandler("DEBUG", {
-        formatter: "[{levelName}] {msg}",
-      }),
+      formatter: "[{levelName}] {msg}",
+    }),
   },
 
   loggers: {
@@ -16,4 +16,3 @@ log.setup({
 });
 
 export const logger = log.getLogger("braino");
-
