@@ -33,6 +33,17 @@ export abstract class Core {
   protected throwError = (message?: string) => {
     throw Error(message);
   };
+
+  protected reply = async (message: string) => {
+    try {
+      return await this.context.reply(message, {
+        reply_to_message_id: this.context.msg?.message_id,
+        parse_mode: "Markdown",
+      });
+    } catch {
+      throw new ClientError(message);
+    }
+  };
 }
 
 // User Chat Client

@@ -12,7 +12,7 @@ class Handler extends Core {
 
     // Reply Message
     await this.#chat.update();
-    await this.context.reply(assistantMessage);
+    return await this.reply(assistantMessage);
   };
 
   chatWithOpenAIChatGPT = async () => {
