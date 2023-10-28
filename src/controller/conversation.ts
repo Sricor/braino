@@ -26,7 +26,7 @@ export class Clear extends MiddlewareObject {
         return await Clear.#messages(context);
     }
   };
-
+  
   static #prompt = async (context: Context) => {
     const conversation = new ConversationClient(context.user.identifier);
     await conversation.clearPrompt();

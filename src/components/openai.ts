@@ -1,20 +1,9 @@
-export class OpenAI {
-  api = "https://api.openai.com";
+import { HTTPClient } from "@components/http.ts";
 
-  constructor(readonly token: string) {}
-
-  #request = async (
-    method: string,
-    path: string,
-    headers?: HeadersInit,
-    body?: BodyInit,
-  ) => {
-    return await fetch(`${this.api}${path}`, {
-      method: method,
-      headers: { ...headers, ...this.#defaultHeader() },
-      body: body,
-    });
-  };
+export class OpenAI extends HTTPClient {
+  constructor(readonly token: string) {
+    super("https://api.openai.com");
+  }
 
   #defaultHeader() {
     return {
@@ -26,8 +15,7 @@ export class OpenAI {
   chat = {
     completions: {
       create: async (params: ChatCompletionsParams) => {
-        const response = await this.#request(
-          "POST",
+        const response = await this.post(
           "/v1/chat/completions",
           this.#defaultHeader(),
           JSON.stringify(params),

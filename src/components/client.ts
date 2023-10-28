@@ -174,6 +174,6 @@ export class OpenAIClient {
       return { content: assistantMessage, role: "assistant" } as Message;
     }
 
-    throw new ClientError(JSON.stringify(response));
+    throw new ClientError(JSON.stringify(response, undefined, " "));
   };
 }
