@@ -10,8 +10,6 @@ export class Braino {
 
   constructor(token: string, config?: BotConfig) {
     this.#bot = new TelegramBot(token, config);
-
-    // this.#bot.on("message", new Conversation.Chat())
     this.setMyCommands();
     this.context();
     this.command();

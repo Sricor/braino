@@ -15,7 +15,7 @@ export class Database {
   private constructor() {}
   readonly #database = Database.#client.database("content");
 
-  readonly ChatClientDatabase = new ChatClientDatabase(
+  readonly ConversationClientDatabase = new ConversationClientDatabase(
     this.#database,
     "chat-messages",
   );
@@ -33,15 +33,16 @@ abstract class ClientDatabase<T extends Schema> {
   insert = async (data: T) => await this.collection.insertOne(data);
 }
 
-class ChatClientDatabase extends ClientDatabase<ChatClientSchema> {
+class ConversationClientDatabase
+  extends ClientDatabase<ConversationClientSchema> {
   select = async (id: number) => await this.collection.findOne({ userid: id });
-  update = async (data: ChatClientSchema) =>
+  update = async (data: ConversationClientSchema) =>
     await this.collection.updateOne({ userid: data.userid }, { $set: data });
 }
 
 class OpenAIClientDatabase extends ClientDatabase<OpenAIClientSchema> {
   select = async (id: number) => await this.collection.findOne({ userid: id });
-  update = async (data: ChatClientSchema) =>
+  update = async (data: ConversationClientSchema) =>
     await this.collection.updateOne({ userid: data.userid }, { $set: data });
 }
 
@@ -54,8 +55,10 @@ export interface Message {
   readonly content: string;
 }
 
-export interface ChatClientSchema extends Schema {
-  readonly prompts?: string[];
+export type Prompt = string;
+
+export interface ConversationClientSchema extends Schema {
+  readonly prompts?: Prompt[];
   readonly messages?: Message[];
 }
 

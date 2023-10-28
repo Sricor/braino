@@ -1,26 +1,35 @@
-import type { Message } from "@components/mongo.ts";
-import type {
-  ChatClientSchema,
-  OpenAIClientSchema,
+import {
+  type ConversationClientSchema,
+  Database as DB,
+  type Message,
+  type OpenAIClientSchema,
+  type Prompt,
 } from "@components/mongo.ts";
-import { Database } from "@components/mongo.ts";
+
 import { OpenAI } from "@components/openai.ts";
 import { ClientError } from "@components/errors.ts";
 
-// User Chat Client
 export class ConversationClient {
-  readonly #database = Database.instance().ChatClientDatabase;
-  readonly #schema: Promise<ChatClientSchema>;
+  readonly #database = DB.instance().ConversationClientDatabase;
+  readonly #schema: Promise<ConversationClientSchema>;
+  readonly #prompts: Promise<Prompt[]>;
+  readonly #messages: Promise<Message[]>;
 
   constructor(private readonly identifier: number) {
-    this.#schema = this.#getSchema();
+    this.#schema = this.#selectSchema();
+    this.#prompts = this.#selectPrompts();
+    this.#messages = this.#selectMessages();
   }
 
-  get schema() {
-    return this.#schema;
+  get prompts() {
+    return this.#prompts;
   }
 
-  #getSchema = async () => {
+  get messages() {
+    return this.#messages;
+  }
+
+  #selectSchema = async () => {
     let data = await this.#database.select(this.identifier);
     if (!data) {
       data = { userid: this.identifier };
@@ -29,15 +38,7 @@ export class ConversationClient {
     return data;
   };
 
-  update = async (item?: ChatClientSchema) => {
-    return await this.#database.update({
-      ...await this.#schema,
-      ...item,
-      ...{ userid: this.identifier },
-    });
-  };
-
-  selectPrompt = async () => {
+  #selectPrompts = async () => {
     let prompts = (await this.#schema).prompts;
     if (typeof prompts === "undefined") {
       prompts = [];
@@ -46,7 +47,7 @@ export class ConversationClient {
     return prompts;
   };
 
-  selectMessages = async () => {
+  #selectMessages = async () => {
     let messages = (await this.#schema).messages;
     if (typeof messages === "undefined") {
       messages = [];
@@ -55,42 +56,67 @@ export class ConversationClient {
     return messages;
   };
 
-  insertPrompt = async (...items: string[]) => {
-    const prompt = await this.selectPrompt();
-    return prompt.push(...items);
+  update = async (item?: ConversationClientSchema) => {
+    return await this.#database.update({
+      ...{ messages: await this.#messages },
+      ...{ prompts: await this.#prompts },
+      ...item,
+      ...{ userid: this.identifier },
+    });
+  };
+
+  insertPrompt = async (...items: Prompt[]) => {
+    (await this.#prompts).push(...items);
   };
 
   insertMessages = async (...items: Message[]) => {
-    const messages = await this.selectMessages();
-    return messages.push(...items);
-  };
-
-  insertUserMessage = async (content: string) => {
-    return await this.insertMessages({ role: "user", content: content });
-  };
-
-  insertAssistantMessage = async (content: string) => {
-    return await this.insertMessages({ role: "assistant", content: content });
-  };
-
-  insertSystemMessage = async (content: string) => {
-    return await this.insertMessages({ role: "system", content: content });
+    (await this.#messages).push(...items);
   };
 
   clearPrompt = async () => {
-    const prompt = await this.selectPrompt();
-    if (prompt && prompt.length > 0) prompt.length = 0;
+    (await this.#prompts).length = 0;
   };
 
   clearMessages = async () => {
-    const messages = await this.selectMessages();
-    if (messages && messages.length > 0) messages.length = 0;
+    (await this.#messages).length = 0;
+  };
+
+  chat = async (
+    content: string,
+    model: (messages: Message[]) => Message | Promise<Message>,
+    prompt = true,
+  ) => {
+    const prompts = await this.#prompts;
+    const messages = await this.#messages;
+
+    // Add Prompts Messages
+    if (prompt) {
+      prompts.forEach((element) => {
+        messages.push({ role: "system", content: element });
+      });
+    }
+
+    // Add User Messages
+    messages.push({ role: "user", content: content });
+
+    // Create Conversation with Messages
+    const reply = await model(messages);
+
+    // Remove Prompts Messages
+    if (prompt) {
+      messages.splice(messages.length - (prompts.length + 1), prompts.length);
+    }
+
+    // Add Ass Messages
+    messages.push(reply);
+
+    return reply;
   };
 }
 
 // User OpenAI Client
 export class OpenAIClient {
-  readonly #database = Database.instance().OpenAIClientDatabase;
+  readonly #database = DB.instance().OpenAIClientDatabase;
   readonly #schema: Promise<OpenAIClientSchema>;
 
   constructor(private readonly identifier: number) {
@@ -130,11 +156,10 @@ export class OpenAIClient {
     return openai;
   };
 
-  chat = async (messages: Message[]) => {
-    if (messages.length === 0) throw new ClientError("Chat messages is empty.");
+  chatGPT = async (messages: Message[]) => {
     const openai = await this.#instanOpenAI();
     const config = (await this.#schema).chat;
-    return await openai.chat.completions.create({
+    const response = await openai.chat.completions.create({
       model: config?.model || "gpt-3.5-turbo",
       messages: messages,
       temperature: config?.temperature,
@@ -142,5 +167,13 @@ export class OpenAIClient {
       presence_penalty: config?.presence_penalty,
       frequency_penalty: config?.frequency_penalty,
     });
+
+    // Response Messages
+    if (response.choices) {
+      const assistantMessage = response.choices[0].message.content;
+      return { content: assistantMessage, role: "assistant" } as Message;
+    }
+
+    throw new ClientError(" ");
   };
 }
