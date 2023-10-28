@@ -4,6 +4,7 @@ import {
   type Message,
   type OpenAIClientSchema,
   type Prompt,
+  type TelegraphClientSchema,
 } from "@components/mongo.ts";
 
 import { OpenAI } from "@components/openai.ts";
@@ -123,10 +124,6 @@ export class OpenAIClient {
     this.#schema = this.#getSchema();
   }
 
-  get schema() {
-    return this.#schema;
-  }
-
   #getSchema = async () => {
     let data = await this.#database.select(this.identifier);
     if (!data) {
@@ -175,5 +172,31 @@ export class OpenAIClient {
     }
 
     throw new ClientError(JSON.stringify(response, undefined, " "));
+  };
+}
+
+export class TelegraphClient {
+  readonly #database = DB.instance().TelegraphClientDatabase;
+  readonly #schema: Promise<TelegraphClientSchema>;
+
+  constructor(private readonly identifier: number) {
+    this.#schema = this.#selectSchema();
+  }
+
+  #selectSchema = async () => {
+    let data = await this.#database.select(this.identifier);
+    if (!data) {
+      data = { userid: this.identifier };
+      await this.#database.insert(data);
+    }
+    return data;
+  };
+
+  update = async (item?: OpenAIClientSchema) => {
+    return await this.#database.update({
+      ...await this.#schema,
+      ...item,
+      ...{ userid: this.identifier },
+    });
   };
 }

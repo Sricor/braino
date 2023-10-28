@@ -23,6 +23,10 @@ export class Database {
     this.#database,
     "openai-config",
   );
+  readonly TelegraphClientDatabase = new TelegraphClientDatabase(
+    this.#database,
+    "telegraph",
+  );
 }
 
 abstract class ClientDatabase<T extends Schema> {
@@ -43,6 +47,12 @@ class ConversationClientDatabase
 class OpenAIClientDatabase extends ClientDatabase<OpenAIClientSchema> {
   select = async (id: number) => await this.collection.findOne({ userid: id });
   update = async (data: ConversationClientSchema) =>
+    await this.collection.updateOne({ userid: data.userid }, { $set: data });
+}
+
+class TelegraphClientDatabase extends ClientDatabase<TelegraphClientSchema> {
+  select = async (id: number) => await this.collection.findOne({ userid: id });
+  update = async (data: TelegraphClientSchema) =>
     await this.collection.updateOne({ userid: data.userid }, { $set: data });
 }
 
@@ -72,4 +82,8 @@ export interface OpenAIClientSchema extends Schema {
     readonly presence_penalty?: number;
     readonly frequency_penalty?: number;
   };
+}
+
+export interface TelegraphClientSchema extends Schema {
+  readonly access_token?: string;
 }
