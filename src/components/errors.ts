@@ -10,3 +10,4 @@ class ErrorBase extends Error {
 }
 
 export class ClientError extends ErrorBase {}
+export class HTTPError extends ErrorBase {}
