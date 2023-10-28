@@ -1,62 +1,59 @@
-import type { Context, NextFunction } from "@components/grammy.ts";
+import type { Context, Next } from "@components/grammy.ts";
+import { MiddlewareObject } from "@components/grammy.ts";
 import type { OpenAIClientSchema } from "@components/mongo.ts";
-import { Core, OpenAIClient } from "./core.ts";
+import { OpenAIClient } from "@components/client.ts";
 
 type ChatFields = OpenAIClientSchema["chat"];
 
-class Handler extends Core {
-  readonly #openai = new OpenAIClient(this.identity);
+export class OpenAI extends MiddlewareObject {
+  middleware = () => async (context: Context, _next: Next) => {
+    const openai = new OpenAIClient(context.user.identifier);
+    const parameters = context.conversation.splitTextMessage();
+    const content = context.match?.toString() || "";
 
-  handleRequest = async () => {
-    const params = this.context.match?.toString();
+    const result = parameters.length === 1
+      ? await OpenAI.handleNoParams(openai)
+      : await this.handleParams(content, openai);
 
-    if (params) {
-      await this.handleParams(params);
-    } else {
-      await this.handleNoParams();
-    }
+    await context.conversation.reply(result);
   };
 
-  handleNoParams = async () => {
-    const config = await this.#openai.schema;
+  static handleNoParams = async (client: OpenAIClient) => {
+    const config = await client.schema;
     if (config) {
-      this.context.reply(
-        JSON.stringify(config, undefined, " "),
-      );
+      return JSON.stringify(config, undefined, " ");
     } else {
-      this.context.reply("NULL");
+      return "NULL";
     }
   };
 
-  handleParams = async (
-    params: string,
-  ) => {
+  handleParams = async (params: string, client: OpenAIClient) => {
     let paramsJSON: OpenAIClientSchema;
     try {
       paramsJSON = JSON.parse(params);
     } catch {
-      this.context.reply("JSON Error.");
-      return;
+      return "JSON Error.";
     }
 
     const { api, token, chat } = paramsJSON;
-    const chatFields = await this.mergeChatFields(chat);
+    const chatFields = await this.mergeChatFields(chat, client);
 
     const updatedConfig: OpenAIClientSchema = {
-      userid: this.identity,
+      userid: 0,
       api,
       token,
       chat: chatFields,
     };
 
-    await this.#openai.update(updatedConfig);
-    this.context.reply("All Set.");
+    await client.update(updatedConfig);
+    return "All Set.";
   };
 
   mergeChatFields = async (
     targetChat: ChatFields | undefined,
+    client: OpenAIClient,
   ): Promise<ChatFields> => {
-    const config = (await this.#openai.schema).chat;
+    const config = (await client.schema).chat;
     return {
       model: typeof targetChat?.model === "string"
         ? targetChat.model
@@ -76,8 +73,3 @@ class Handler extends Core {
     };
   };
 }
-
-export default async (context: Context, _next: NextFunction): Promise<void> => {
-  await (new Handler(context)).handleRequest();
-  return;
-};

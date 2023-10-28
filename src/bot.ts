@@ -1,37 +1,45 @@
-import { Bot, BotConfig as Config, Context as CT } from "@components/grammy.ts";
-
-import Context from "@context";
-import Controller from "@controller";
+import { BotConfig, TelegramBot } from "@components/grammy.ts";
+import * as Context from "./context.ts";
+import * as Model from "@controller/model.ts";
+import * as Format from "@controller/format.ts";
+import * as Crypto from "@controller/crypto.ts";
+import * as Conversation from "@controller/conversation.ts";
 
 export class Braino {
-  #core: Bot;
+  #bot: TelegramBot;
 
-  constructor(token: string, config?: Config<CT>) {
-    this.#core = new Bot(token, config);
+  constructor(token: string, config?: BotConfig) {
+    this.#bot = new TelegramBot(token, config);
+
+    // this.#bot.on("message", new Conversation.Chat())
     this.setMyCommands();
     this.context();
     this.command();
-    this.chat();
+    this.conversation();
   }
 
   context = () => {
-    this.#core.use(Context.Logger);
+    this.#bot.use(new Context.Logger(), new Context.Initial());
   };
 
   command = () => {
-    this.#core.command("me", Controller.Me);
-    this.#core.command("start", Controller.Start);
-    this.#core.command("clear", Controller.Clear);
-    this.#core.command("prompt", Controller.Prompt);
-    this.#core.command("openai", Controller.OpenAI);
-    this.#core.command("base64decode", Controller.Base64Decode);
-    this.#core.command("base64encode", Controller.Base64Encode);
-    this.#core.command("sha256", Controller.SHA256);
-    this.#core.command("hmacsha256", Controller.HMACSHA256);
+    this.#bot.command("start", new Format.Start());
+    this.#bot.command("info", new Format.UserInfomation());
+    this.#bot.command("clear", new Conversation.Clear());
+    this.#bot.command("openai", new Model.OpenAI());
+    this.#bot.command("prompt", new Conversation.Prompt());
+    this.#bot.command("base64encode", new Format.Base64Encode());
+    this.#bot.command("base64decode", new Format.Base64Decode());
+    this.#bot.command("sha256", new Crypto.SHA256());
+    this.#bot.command("hmacsha256", new Crypto.HMACSHA256());
+  };
+
+  conversation = () => {
+    this.#bot.on("message", new Conversation.Chat());
   };
 
   setMyCommands = async () => {
-    await this.#core.api.setMyCommands([
+    await this.#bot.api.setMyCommands([
       { command: "me", description: "Information about me." },
       { command: "start", description: "Start the bot." },
       { command: "clear", description: "Clear history chat." },
@@ -44,11 +52,7 @@ export class Braino {
     ]);
   };
 
-  chat = () => {
-    this.#core.on("message", Controller.Chat);
-  };
-
   start = async () => {
-    return await this.#core.start();
+    return await this.#bot.start();
   };
 }

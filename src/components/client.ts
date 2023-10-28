@@ -1,4 +1,3 @@
-import type { Context } from "@components/grammy.ts";
 import type { Message } from "@components/mongo.ts";
 import type {
   ChatClientSchema,
@@ -8,50 +7,12 @@ import { Database } from "@components/mongo.ts";
 import { OpenAI } from "@components/openai.ts";
 import { ClientError } from "@components/errors.ts";
 
-export abstract class Core {
-  protected readonly identity: number;
-
-  constructor(protected readonly context: Context) {
-    this.identity = this.#getIndentity();
-  }
-
-  #getIndentity = () => {
-    if (!this.context.from?.id) throw new ClientError("Access denied.");
-    return this.context.from.id;
-  };
-
-  protected textMessageParams = () => {
-    return this.context.match ? this.context.match.toString().split(" ") : [];
-  };
-
-  protected editCallbackQueryText = async <S extends string>(content: S) => {
-    return this.context.callbackQuery?.message?.text !== content
-      ? await this.context.editMessageText(content)
-      : undefined;
-  };
-
-  protected throwError = (message?: string) => {
-    throw Error(message);
-  };
-
-  protected reply = async (message: string) => {
-    try {
-      return await this.context.reply(message, {
-        reply_to_message_id: this.context.msg?.message_id,
-        parse_mode: "Markdown",
-      });
-    } catch {
-      throw new ClientError(message);
-    }
-  };
-}
-
 // User Chat Client
-export class ChatClient {
+export class ConversationClient {
   readonly #database = Database.instance().ChatClientDatabase;
   readonly #schema: Promise<ChatClientSchema>;
 
-  constructor(private readonly identity: number) {
+  constructor(private readonly identifier: number) {
     this.#schema = this.#getSchema();
   }
 
@@ -60,9 +21,9 @@ export class ChatClient {
   }
 
   #getSchema = async () => {
-    let data = await this.#database.select(this.identity);
+    let data = await this.#database.select(this.identifier);
     if (!data) {
-      data = { userid: this.identity };
+      data = { userid: this.identifier };
       await this.#database.insert(data);
     }
     return data;
@@ -72,7 +33,7 @@ export class ChatClient {
     return await this.#database.update({
       ...await this.#schema,
       ...item,
-      ...{ userid: this.identity },
+      ...{ userid: this.identifier },
     });
   };
 
@@ -80,7 +41,7 @@ export class ChatClient {
     let prompts = (await this.#schema).prompts;
     if (typeof prompts === "undefined") {
       prompts = [];
-      await this.update({ userid: this.identity, prompts: prompts });
+      await this.update({ userid: this.identifier, prompts: prompts });
     }
     return prompts;
   };
@@ -89,7 +50,7 @@ export class ChatClient {
     let messages = (await this.#schema).messages;
     if (typeof messages === "undefined") {
       messages = [];
-      await this.update({ userid: this.identity, messages: messages });
+      await this.update({ userid: this.identifier, messages: messages });
     }
     return messages;
   };
@@ -132,7 +93,7 @@ export class OpenAIClient {
   readonly #database = Database.instance().OpenAIClientDatabase;
   readonly #schema: Promise<OpenAIClientSchema>;
 
-  constructor(private readonly identity: number) {
+  constructor(private readonly identifier: number) {
     this.#schema = this.#getSchema();
   }
 
@@ -141,9 +102,9 @@ export class OpenAIClient {
   }
 
   #getSchema = async () => {
-    let data = await this.#database.select(this.identity);
+    let data = await this.#database.select(this.identifier);
     if (!data) {
-      data = { userid: this.identity };
+      data = { userid: this.identifier };
       await this.#database.insert(data);
     }
     return data;
@@ -153,7 +114,7 @@ export class OpenAIClient {
     return await this.#database.update({
       ...await this.#schema,
       ...item,
-      ...{ userid: this.identity },
+      ...{ userid: this.identifier },
     });
   };
 
