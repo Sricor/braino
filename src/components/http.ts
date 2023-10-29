@@ -1,11 +1,7 @@
-// interface Client {
-//     baseURL: string
-// }
-
-export class HTTPClient {
+export abstract class HTTPClient {
   constructor(public api: string) {}
 
-  #request = async (
+  protected request = async (
     method: string,
     path: string,
     headers?: HeadersInit,
@@ -18,11 +14,11 @@ export class HTTPClient {
     });
   };
 
-  get = async (path: string, headers?: HeadersInit, body?: BodyInit) => {
-    return await this.#request("GET", path, headers, body);
+  protected get = async (path: string, headers?: HeadersInit, body?: BodyInit) => {
+    return await this.request("GET", path, headers, body);
   };
 
-  post = async (path: string, headers?: HeadersInit, body?: BodyInit) => {
-    return await this.#request("POST", path, headers, body);
+  protected post = async (path: string, headers?: HeadersInit, body?: BodyInit) => {
+    return await this.request("POST", path, headers, body);
   };
 }
