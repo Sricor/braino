@@ -60,22 +60,22 @@ export class Messages extends MiddlewareObject {
   middleware = () => async (context: Context, _next: Next) => {
     const conversation = new ConversationClient(context.user.identifier);
     const messages = await conversation.messages;
-    if(messages.length === 0) {
-      return await context.conversation.reply("Messages is Empty.")
+    if (messages.length === 0) {
+      return await context.conversation.reply("Messages is Empty.");
     }
 
     const telegraph = new TelegraphClient(context.user.identifier);
-    const result: string[] = []
-    let li = 2
-    messages.forEach((element)=>{
-      if(li%2 === 0){
-        result.push("\n")
+    const result: string[] = [];
+    let li = 2;
+    messages.forEach((element) => {
+      if (li % 2 === 0) {
+        result.push("\n");
       }
-      result.push(`${element.role.toUpperCase()} : ${element.content} \n`)
+      result.push(`${element.role.toUpperCase()} : ${element.content} \n`);
       // result.push(JSON.stringify(element))
       // result.push("\n")
-      li += 1
-    })
+      li += 1;
+    });
     const url = await telegraph.edit(result);
     await context.conversation.reply(url);
   };
@@ -93,7 +93,7 @@ export class Prompt extends MiddlewareObject {
 
   static #select = async (context: Context) => {
     const conversation = new ConversationClient(context.user.identifier);
-    const prompts = await conversation.prompts
+    const prompts = await conversation.prompts;
     if (prompts.length === 0) {
       return context.conversation.reply("Prompt is empty.");
     }

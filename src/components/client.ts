@@ -195,17 +195,15 @@ export class TelegraphClient extends ClientBase<TelegraphClientSchema> {
         path: data.page_path,
       });
       return result.url;
-
     } else {
       const { result } = await telegraph.createPage({
         title: titile,
         content: content,
       });
-      
+
       data.page_path = result.path;
       await this.update();
       return result.url;
-
     }
   };
 }

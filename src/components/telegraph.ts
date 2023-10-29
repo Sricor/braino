@@ -48,7 +48,6 @@ export class Telegraph extends HTTPClient {
       this.#requestHeaders(),
       await this.#requestBody(body),
     );
-    console.log(await this.#requestBody(body))
     return await response.json() as EditPageResponse;
   };
 
@@ -113,12 +112,12 @@ interface EditPageRequest extends CreatePageRequest {
   path: string;
 }
 
-interface CreatePageResponse  extends Response {
-  result: Page
+interface CreatePageResponse extends Response {
+  result: Page;
 }
 
 interface EditPageResponse extends Response {
-  result: Page
+  result: Page;
 }
 
 interface GetPageListRequest {
