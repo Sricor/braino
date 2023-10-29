@@ -1,85 +1,92 @@
 import {
+  ClientDatabase,
   type ConversationClientSchema,
   Database as DB,
   type Message,
   type OpenAIClientSchema,
   type Prompt,
+  Schema,
   type TelegraphClientSchema,
 } from "@components/mongo.ts";
 
 import { OpenAI } from "@components/openai.ts";
+import { Telegraph } from "@components/telegraph.ts";
 import { ClientError } from "@components/errors.ts";
 
-export class ConversationClient {
-  readonly #database = DB.instance().ConversationClientDatabase;
-  readonly #schema: Promise<ConversationClientSchema>;
-  readonly #prompts: Promise<Prompt[]>;
-  readonly #messages: Promise<Message[]>;
+abstract class ClientBase<T extends Schema> {
+  protected readonly data: Promise<T>;
 
-  constructor(private readonly identifier: number) {
-    this.#schema = this.#selectSchema();
-    this.#prompts = this.#selectPrompts();
-    this.#messages = this.#selectMessages();
+  constructor(
+    protected identifier: number,
+    protected readonly database: ClientDatabase<T>,
+  ) {
+    this.data = this.selectSchemaData();
   }
 
-  get prompts() {
-    return this.#prompts;
-  }
-
-  get messages() {
-    return this.#messages;
-  }
-
-  #selectSchema = async () => {
-    let data = await this.#database.select(this.identifier);
+  protected selectSchemaData = async () => {
+    let data = await this.database.select(this.identifier);
     if (!data) {
-      data = { userid: this.identifier };
-      await this.#database.insert(data);
+      data = { userid: this.identifier } as T;
+      await this.database.insert(data);
     }
     return data;
   };
 
+  update = async (item?: T) => {
+    return item
+      ? await this.database.update({
+        ...item,
+        ...{ userid: this.identifier },
+      })
+      : await this.database.update({
+        ...await this.data,
+        ...{ userid: this.identifier },
+      });
+  };
+}
+
+export class ConversationClient extends ClientBase<ConversationClientSchema> {
+  readonly prompts: Promise<Prompt[]>;
+  readonly messages: Promise<Message[]>;
+
+  constructor(identifier: number) {
+    super(identifier, DB.instance().ConversationClientDatabase);
+    this.prompts = this.#selectPrompts();
+    this.messages = this.#selectMessages();
+  }
+
   #selectPrompts = async () => {
-    let prompts = (await this.#schema).prompts;
-    if (typeof prompts === "undefined") {
-      prompts = [];
-      await this.update({ userid: this.identifier, prompts: prompts });
+    const data = await this.data;
+    if (typeof data.prompts === "undefined") {
+      data.prompts = [];
+      await this.update();
     }
-    return prompts;
+    return data.prompts;
   };
 
   #selectMessages = async () => {
-    let messages = (await this.#schema).messages;
-    if (typeof messages === "undefined") {
-      messages = [];
-      await this.update({ userid: this.identifier, messages: messages });
+    const data = await this.data;
+    if (typeof data.messages === "undefined") {
+      data.messages = [];
+      await this.update();
     }
-    return messages;
-  };
-
-  update = async (item?: ConversationClientSchema) => {
-    return await this.#database.update({
-      ...{ messages: await this.#messages },
-      ...{ prompts: await this.#prompts },
-      ...item,
-      ...{ userid: this.identifier },
-    });
+    return data.messages;
   };
 
   insertPrompt = async (...items: Prompt[]) => {
-    (await this.#prompts).push(...items);
+    (await this.prompts).push(...items);
   };
 
   insertMessages = async (...items: Message[]) => {
-    (await this.#messages).push(...items);
+    (await this.messages).push(...items);
   };
 
   clearPrompt = async () => {
-    (await this.#prompts).length = 0;
+    (await this.prompts).length = 0;
   };
 
   clearMessages = async () => {
-    (await this.#messages).length = 0;
+    (await this.messages).length = 0;
   };
 
   chat = async (
@@ -87,8 +94,8 @@ export class ConversationClient {
     model: (messages: Message[]) => Message | Promise<Message>,
     prompt = true,
   ) => {
-    const prompts = await this.#prompts;
-    const messages = await this.#messages;
+    const prompts = await this.prompts;
+    const messages = await this.messages;
 
     // Add Prompts Messages
     if (prompt) {
@@ -116,46 +123,30 @@ export class ConversationClient {
 }
 
 // User OpenAI Client
-export class OpenAIClient {
-  readonly #database = DB.instance().OpenAIClientDatabase;
-  readonly #schema: Promise<OpenAIClientSchema>;
-
-  constructor(private readonly identifier: number) {
-    this.#schema = this.#getSchema();
+export class OpenAIClient extends ClientBase<OpenAIClientSchema> {
+  constructor(identifier: number) {
+    super(identifier, DB.instance().OpenAIClientDatabase);
   }
 
-  #getSchema = async () => {
-    let data = await this.#database.select(this.identifier);
-    if (!data) {
-      data = { userid: this.identifier };
-      await this.#database.insert(data);
-    }
-    return data;
-  };
-
-  update = async (item?: OpenAIClientSchema) => {
-    return await this.#database.update({
-      ...await this.#schema,
-      ...item,
-      ...{ userid: this.identifier },
-    });
-  };
+  get config() {
+    return this.data;
+  }
 
   #instanOpenAI = async () => {
-    const config = await this.#schema;
-    if (!config?.token) {
+    const data = await this.data;
+    if (!data?.token) {
       throw new ClientError("You haven't provided OpenAI token.");
     }
 
-    const openai = new OpenAI(config.token);
-    config.api ? openai.api = config.api : undefined;
+    const openai = new OpenAI(data.token);
+    data.api ? openai.api = data.api : undefined;
 
     return openai;
   };
 
   chatGPT = async (messages: Message[]) => {
     const openai = await this.#instanOpenAI();
-    const config = (await this.#schema).chat;
+    const config = (await this.data).chat;
     const response = await openai.chat.completions.create({
       model: config?.model || "gpt-3.5-turbo",
       messages: messages,
@@ -175,28 +166,46 @@ export class OpenAIClient {
   };
 }
 
-export class TelegraphClient {
-  readonly #database = DB.instance().TelegraphClientDatabase;
-  readonly #schema: Promise<TelegraphClientSchema>;
+export class TelegraphClient extends ClientBase<TelegraphClientSchema> {
+  protected readonly telegraph: Promise<Telegraph>;
 
-  constructor(private readonly identifier: number) {
-    this.#schema = this.#selectSchema();
+  constructor(identifier: number) {
+    super(identifier, DB.instance().TelegraphClientDatabase);
+    this.telegraph = this.#instanTelegraph();
   }
 
-  #selectSchema = async () => {
-    let data = await this.#database.select(this.identifier);
-    if (!data) {
-      data = { userid: this.identifier };
-      await this.#database.insert(data);
+  #instanTelegraph = async () => {
+    const data = await this.data;
+    const telegraph = new Telegraph(data.access_token);
+    if (!data.access_token) {
+      data.access_token = await telegraph.token;
+      await this.update();
     }
-    return data;
+    return telegraph;
   };
 
-  update = async (item?: OpenAIClientSchema) => {
-    return await this.#database.update({
-      ...await this.#schema,
-      ...item,
-      ...{ userid: this.identifier },
-    });
+  edit = async (content: string | string[]) => {
+    const data = await this.data;
+    const telegraph = await this.telegraph;
+    const titile = this.identifier.toString();
+    if (data.page_path) {
+      const { result } = await telegraph.editPage({
+        title: titile,
+        content: content,
+        path: data.page_path,
+      });
+      return result.url;
+
+    } else {
+      const { result } = await telegraph.createPage({
+        title: titile,
+        content: content,
+      });
+      
+      data.page_path = result.path;
+      await this.update();
+      return result.url;
+
+    }
   };
 }

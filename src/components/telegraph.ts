@@ -39,7 +39,7 @@ export class Telegraph extends HTTPClient {
       this.#requestHeaders(),
       await this.#requestBody(body),
     );
-    return await response.json() as Page;
+    return await response.json() as CreatePageResponse;
   };
 
   editPage = async (body: EditPageRequest) => {
@@ -48,7 +48,8 @@ export class Telegraph extends HTTPClient {
       this.#requestHeaders(),
       await this.#requestBody(body),
     );
-    return await response.json() as Page;
+    console.log(await this.#requestBody(body))
+    return await response.json() as EditPageResponse;
   };
 
   getPageList = async (body: GetPageListRequest) => {
@@ -74,7 +75,7 @@ interface Response {
   ok: boolean;
 }
 
-interface Page extends Response {
+interface Page {
   path: string;
   url: string;
   title: string;
@@ -102,7 +103,7 @@ interface CreateAccountResponse extends Response {
 
 interface CreatePageRequest {
   title: string;
-  content: Node[];
+  content: string | Node[];
   author_name?: string;
   author_url?: string;
   return_content?: boolean;
@@ -110,6 +111,14 @@ interface CreatePageRequest {
 
 interface EditPageRequest extends CreatePageRequest {
   path: string;
+}
+
+interface CreatePageResponse  extends Response {
+  result: Page
+}
+
+interface EditPageResponse extends Response {
+  result: Page
 }
 
 interface GetPageListRequest {

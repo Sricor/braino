@@ -19,7 +19,7 @@ export class OpenAI extends MiddlewareObject {
   };
 
   static handleNoParams = async (client: OpenAIClient) => {
-    const config = await client.schema;
+    const config = await client.config;
     if (config) {
       return JSON.stringify(config, undefined, " ");
     } else {
@@ -53,7 +53,7 @@ export class OpenAI extends MiddlewareObject {
     targetChat: ChatFields | undefined,
     client: OpenAIClient,
   ): Promise<ChatFields> => {
-    const config = (await client.schema).chat;
+    const config = (await client.config).chat;
     return {
       model: typeof targetChat?.model === "string"
         ? targetChat.model

@@ -23,6 +23,7 @@ export class Braino {
   command = () => {
     this.#bot.command("start", new Format.Start());
     this.#bot.command("info", new Format.UserInfomation());
+    this.#bot.command("messages", new Conversation.Messages());
     this.#bot.command("clear", new Conversation.Clear());
     this.#bot.command("openai", new Model.OpenAI());
     this.#bot.command("prompt", new Conversation.Prompt());
@@ -38,10 +39,13 @@ export class Braino {
 
   setMyCommands = async () => {
     await this.#bot.api.setMyCommands([
-      { command: "me", description: "Information about me." },
-      { command: "start", description: "Start the bot." },
+      { command: "info", description: "Information about me." },
       { command: "clear", description: "Clear history chat." },
       { command: "prompt", description: "add/view prompt" },
+      {
+        command: "messages",
+        description: "view messages history on telegraph",
+      },
       { command: "openai", description: "Edit OpenAI" },
       { command: "base64decode", description: "base64Decode <content>." },
       { command: "base64encode", description: "base64Encode <content>." },
